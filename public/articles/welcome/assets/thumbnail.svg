@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-label="Layered article cards on a teal and white background">
+  <rect width="1200" height="675" fill="#f8f7f3"/>
+  <path d="M0 510h1200v165H0z" fill="#116a67"/>
+  <rect x="170" y="110" width="860" height="420" rx="18" fill="#fff" stroke="#dedbd2" stroke-width="6"/>
+  <rect x="226" y="170" width="330" height="34" rx="17" fill="#116a67"/>
+  <rect x="226" y="244" width="682" height="26" rx="13" fill="#d8d4ca"/>
+  <rect x="226" y="304" width="610" height="26" rx="13" fill="#d8d4ca"/>
+  <rect x="226" y="364" width="690" height="26" rx="13" fill="#d8d4ca"/>
+  <rect x="226" y="438" width="156" height="48" rx="8" fill="#171717"/>
+  <circle cx="886" cy="181" r="42" fill="#f0b84f"/>
+  <path d="M786 502 909 317l121 185z" fill="#0d4d4b"/>
+</svg>

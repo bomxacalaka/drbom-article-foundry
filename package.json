@@ -1,0 +1,17 @@
+{
+  "name": "articles-aws",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "article:new": "node scripts/new-article.mjs",
+    "articles:index": "node scripts/build-index.mjs",
+    "articles:validate": "node scripts/validate-article.mjs",
+    "deploy:static": "node scripts/deploy-static.mjs",
+    "deploy:infra": "node scripts/deploy-infra.mjs",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Articles | drbom</title>
+    <meta name="description" content="Recent articles and demos from drbom.">
+    <link rel="stylesheet" href="./shared/article-shell.css">
+    <link rel="stylesheet" href="./index.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="site-header__inner">
+        <a class="brand" href="/">drbom</a>
+        <a class="nav-link" href="/articles/">Articles</a>
+      </div>
+    </header>
+
+    <main class="page">
+      <section class="articles-hero">
+        <p class="eyebrow">Articles</p>
+        <h1>Recent builds, notes, and experiments</h1>
+        <p>Project writeups and interactive demos hosted as static pages with lightweight live interactions.</p>
+      </section>
+
+      <section class="article-grid" id="article-grid" aria-live="polite"></section>
+      <p class="empty-state" id="empty-state" hidden>No published articles yet.</p>
+    </main>
+
+    <script src="./shared/article-shell.js"></script>
+    <script src="./index.js"></script>
+  </body>
+</html>

@@ -1,0 +1,19 @@
+{
+  "generatedAt": "2026-04-16T19:47:07.379Z",
+  "articles": [
+    {
+      "slug": "welcome",
+      "title": "Welcome to drbom Articles",
+      "description": "A small live article used to validate the static article flow, S3 hosting, likes, and comments.",
+      "publishedAt": "2026-04-16T00:00:00.000Z",
+      "updatedAt": "2026-04-16T00:00:00.000Z",
+      "thumbnail": "./assets/thumbnail.svg",
+      "tags": [
+        "system",
+        "demo"
+      ],
+      "author": "drbom",
+      "draft": false
+    }
+  ]
+}

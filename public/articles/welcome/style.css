@@ -1,0 +1,139 @@
+.article-layout {
+  width: min(1120px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 54px 0 80px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 42px;
+}
+
+.article-body {
+  min-width: 0;
+}
+
+.article-hero h1 {
+  margin: 0;
+  font-size: clamp(2.4rem, 6vw, 5.6rem);
+  line-height: 0.96;
+  letter-spacing: 0;
+  max-width: 860px;
+}
+
+.hero-image {
+  display: block;
+  width: 100%;
+  margin: 30px 0 0;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: #fff;
+}
+
+.lede {
+  margin-top: 36px;
+  font-size: 1.3rem;
+  line-height: 1.5;
+}
+
+.article-body h2 {
+  margin: 36px 0 8px;
+  font-size: 1.55rem;
+  letter-spacing: 0;
+}
+
+.article-body p {
+  color: #2d2b28;
+}
+
+.interaction-panel {
+  align-self: start;
+  position: sticky;
+  top: 88px;
+}
+
+.like-box,
+.comments {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  border-radius: 8px;
+  padding: 18px;
+  box-shadow: var(--shadow);
+}
+
+.like-box {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.comments h2 {
+  margin: 0 0 16px;
+  font-size: 1.25rem;
+}
+
+.comment-form {
+  display: grid;
+  gap: 12px;
+}
+
+.comment-form label {
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.comment-form input,
+.comment-form textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: var(--text);
+  background: #fff;
+}
+
+.comment-form textarea {
+  resize: vertical;
+}
+
+.comment-form__website {
+  position: absolute;
+  left: -10000px;
+}
+
+.comments-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.comment {
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+
+.comment__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.comment__header strong {
+  color: var(--text);
+}
+
+.comment p {
+  margin: 8px 0 0;
+}
+
+@media (max-width: 900px) {
+  .article-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .interaction-panel {
+    position: static;
+  }
+}

@@ -1,0 +1,1 @@
+window.ArticlesApi.hydrateArticle("welcome");

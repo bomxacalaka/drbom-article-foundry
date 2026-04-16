@@ -1,0 +1,120 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Serverless likes and comments API for drbom articles.
+
+Parameters:
+  CodeS3Bucket:
+    Type: String
+    Default: drbom.net
+  CodeS3Key:
+    Type: String
+  AllowedOrigin:
+    Type: String
+    Default: https://drbom.net
+  RateLimitSalt:
+    Type: String
+    NoEcho: true
+
+Resources:
+  ArticlesInteractionsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: drbom-articles-interactions
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: pk
+          AttributeType: S
+        - AttributeName: sk
+          AttributeType: S
+      KeySchema:
+        - AttributeName: pk
+          KeyType: HASH
+        - AttributeName: sk
+          KeyType: RANGE
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+
+  ArticlesApiRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: drbom-articles-api-role
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: drbom-articles-api-policy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !Sub "${ArticlesApiLogGroup.Arn}:*"
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:Query
+                  - dynamodb:TransactWriteItems
+                Resource: !GetAtt ArticlesInteractionsTable.Arn
+
+  ArticlesApiLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /aws/lambda/drbom-articles-api
+      RetentionInDays: 30
+
+  ArticlesApiFunction:
+    Type: AWS::Lambda::Function
+    DependsOn:
+      - ArticlesApiLogGroup
+    Properties:
+      FunctionName: drbom-articles-api
+      Runtime: nodejs20.x
+      Handler: index.handler
+      Role: !GetAtt ArticlesApiRole.Arn
+      Timeout: 10
+      MemorySize: 256
+      Code:
+        S3Bucket: !Ref CodeS3Bucket
+        S3Key: !Ref CodeS3Key
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref ArticlesInteractionsTable
+          ALLOWED_ORIGIN: !Ref AllowedOrigin
+          RATE_LIMIT_SALT: !Ref RateLimitSalt
+
+  ArticlesApiFunctionUrl:
+    Type: AWS::Lambda::Url
+    Properties:
+      TargetFunctionArn: !Ref ArticlesApiFunction
+      AuthType: NONE
+      Cors:
+        AllowOrigins:
+          - !Ref AllowedOrigin
+        AllowMethods:
+          - GET
+          - POST
+        AllowHeaders:
+          - content-type
+        MaxAge: 86400
+
+  ArticlesApiFunctionUrlPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ArticlesApiFunction
+      Action: lambda:InvokeFunctionUrl
+      Principal: "*"
+      FunctionUrlAuthType: NONE
+
+Outputs:
+  ArticlesApiUrl:
+    Value: !GetAtt ArticlesApiFunctionUrl.FunctionUrl
+  InteractionsTableName:
+    Value: !Ref ArticlesInteractionsTable

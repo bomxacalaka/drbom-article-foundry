@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Welcome to drbom Articles | drbom</title>
+    <meta name="description" content="A small live article used to validate the static article flow, S3 hosting, likes, and comments.">
+    <link rel="stylesheet" href="../shared/article-shell.css">
+    <link rel="stylesheet" href="./style.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="site-header__inner">
+        <a class="brand" href="/">drbom</a>
+        <a class="nav-link" href="/articles/">Articles</a>
+      </div>
+    </header>
+
+    <main class="article-layout">
+      <article class="article-body">
+        <header class="article-hero">
+          <p class="eyebrow">System demo</p>
+          <h1>Welcome to drbom Articles</h1>
+          <div class="meta-row">
+            <time datetime="2026-04-16T00:00:00.000Z">Apr 16, 2026</time>
+            <span class="tag">system</span>
+            <span class="tag">demo</span>
+          </div>
+          <img class="hero-image" src="./assets/thumbnail.svg" alt="">
+        </header>
+
+        <p class="lede">This first article exists to prove the publishing path works: static files on S3, live likes and comments through Lambda, and article metadata generated into the landing page.</p>
+
+        <h2>What this validates</h2>
+        <p>The article page is plain HTML, CSS, and JavaScript. The browser reads public static files from the `articles/` prefix and uses the shared shell script to load counts, post likes, and submit comments.</p>
+
+        <h2>How future articles are made</h2>
+        <p>Each new article gets its own folder, metadata file, stylesheet, script, and assets directory. The index generator scans those folders and publishes only articles that are not marked as drafts.</p>
+      </article>
+
+      <aside class="interaction-panel" aria-label="Article interactions">
+        <section class="like-box">
+          <button class="button button--primary" id="article-like-button" type="button">Like</button>
+          <span><strong id="article-like-count">0</strong> likes</span>
+          <span><strong id="article-comment-count">0</strong> comments</span>
+        </section>
+
+        <section class="comments">
+          <h2>Comments</h2>
+          <form class="comment-form" id="article-comment-form">
+            <label>
+              Name
+              <input name="name" maxlength="40" required autocomplete="name">
+            </label>
+            <label class="comment-form__website">
+              Website
+              <input name="website" tabindex="-1" autocomplete="off">
+            </label>
+            <label>
+              Comment
+              <textarea name="body" maxlength="1000" required rows="4"></textarea>
+            </label>
+            <button class="button" type="submit">Post comment</button>
+          </form>
+          <p class="status-text" id="article-comments-status"></p>
+          <div class="comments-list" id="article-comments-list"></div>
+        </section>
+      </aside>
+    </main>
+
+    <script src="../shared/article-shell.js"></script>
+    <script src="./script.js"></script>
+  </body>
+</html>
