@@ -90,6 +90,10 @@ export function contentTypeFor(filePath) {
 }
 
 export function cacheControlFor(filePath) {
+  if (path.basename(filePath) === "stats.json") {
+    return "max-age=10, must-revalidate";
+  }
+
   const ext = path.extname(filePath).toLowerCase();
   if (ext === ".html" || ext === ".json") {
     return "max-age=60, must-revalidate";

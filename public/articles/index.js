@@ -1,40 +1,51 @@
-const grid = document.getElementById("article-grid");
+const list = document.getElementById("article-list");
 const empty = document.getElementById("empty-state");
 
 function formatDate(value) {
-  return new Date(value).toLocaleDateString(undefined, {
-    year: "numeric",
+  const date = new Date(value);
+  const now = new Date();
+  const diffMs = now - date;
+  const minute = 60 * 1000;
+  const hour = 60 * minute;
+  const day = 24 * hour;
+
+  if (diffMs >= 0 && diffMs < minute) return "now";
+  if (diffMs >= 0 && diffMs < hour) return `${Math.floor(diffMs / minute)}m`;
+  if (diffMs >= 0 && diffMs < day) return `${Math.floor(diffMs / hour)}h`;
+  if (diffMs >= 0 && diffMs < 7 * day) return `${Math.floor(diffMs / day)}d`;
+
+  return date.toLocaleDateString(undefined, {
     month: "short",
-    day: "numeric"
+    day: "numeric",
+    year: date.getFullYear() === now.getFullYear() ? undefined : "numeric"
   });
 }
 
-function makeCard(article, stats = { likes: 0, comments: 0 }) {
-  const card = document.createElement("article");
-  card.className = "article-card";
+function makeArticleItem(article, stats = { likes: 0, comments: 0 }) {
+  const item = document.createElement("article");
+  item.className = "article-item";
 
   const href = `./${article.slug}/`;
-  const thumb = document.createElement("img");
-  thumb.className = "article-card__thumb";
-  thumb.src = `${href}${article.thumbnail.replace(/^\.\//, "")}`;
-  thumb.alt = "";
-  thumb.loading = "lazy";
+  const content = document.createElement("div");
+  content.className = "article-item__content";
 
-  const body = document.createElement("div");
-  body.className = "article-card__body";
-
-  const meta = document.createElement("div");
-  meta.className = "meta-row";
   const date = document.createElement("time");
+  date.className = "article-item__date";
   date.dateTime = article.publishedAt;
   date.textContent = formatDate(article.publishedAt);
-  meta.append(date);
-  for (const tag of article.tags || []) {
-    const tagEl = document.createElement("span");
-    tagEl.className = "tag";
-    tagEl.textContent = tag;
-    meta.append(tagEl);
-  }
+
+  const statsRow = document.createElement("div");
+  statsRow.className = "article-item__stats";
+
+  const likes = document.createElement("span");
+  likes.className = "article-item__metric";
+  likes.innerHTML = `${icon("heart")}<span>${stats.likes || 0}</span>`;
+
+  const comments = document.createElement("span");
+  comments.className = "article-item__metric";
+  comments.innerHTML = `${icon("comment")}<span>${stats.comments || 0}</span>`;
+
+  statsRow.append(likes, comments);
 
   const title = document.createElement("h2");
   const link = document.createElement("a");
@@ -45,28 +56,27 @@ function makeCard(article, stats = { likes: 0, comments: 0 }) {
   const description = document.createElement("p");
   description.textContent = article.description;
 
-  body.append(meta, title, description);
+  content.append(title, description);
+  item.append(content, date, statsRow);
+  return item;
+}
 
-  const footer = document.createElement("footer");
-  footer.className = "article-card__footer";
-  const author = document.createElement("span");
-  author.textContent = article.author;
-  const statRow = document.createElement("span");
-  statRow.className = "article-card__stats";
-  statRow.textContent = `${stats.likes || 0} likes · ${stats.comments || 0} comments`;
-  footer.append(author, statRow);
-
-  card.append(thumb, body, footer);
-  return card;
+function icon(name) {
+  const icons = {
+    heart:
+      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 8.7c0 5.2-8.5 10-8.5 10s-8.5-4.8-8.5-10A4.6 4.6 0 0 1 12 6a4.6 4.6 0 0 1 8.5 2.7Z"/></svg>',
+    comment:
+      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6.5A3.5 3.5 0 0 1 8.5 3h7A3.5 3.5 0 0 1 19 6.5v4A3.5 3.5 0 0 1 15.5 14H12l-5 4v-4.2a3.5 3.5 0 0 1-2-3.2v-4Z"/></svg>'
+  };
+  return icons[name];
 }
 
 async function loadStats(articles) {
-  if (!window.ArticlesApi?.hasApi() || !articles.length) {
+  if (!articles.length) {
     return {};
   }
   try {
-    const slugs = articles.map((article) => article.slug).join(",");
-    const response = await window.ArticlesApi.request(`/stats?slugs=${encodeURIComponent(slugs)}`);
+    const response = await fetch("./stats.json", { cache: "no-cache" }).then((result) => result.json());
     return response.items || {};
   } catch {
     return {};
@@ -84,7 +94,7 @@ async function init() {
   }
 
   const stats = await loadStats(articles);
-  grid.replaceChildren(...articles.map((article) => makeCard(article, stats[article.slug])));
+  list.replaceChildren(...articles.map((article) => makeArticleItem(article, stats[article.slug])));
 }
 
 init().catch(() => {

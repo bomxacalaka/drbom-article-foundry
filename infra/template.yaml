@@ -13,6 +13,9 @@ Parameters:
   RateLimitSalt:
     Type: String
     NoEcho: true
+  StatsS3Key:
+    Type: String
+    Default: articles/stats.json
 
 Resources:
   ArticlesInteractionsTable:
@@ -61,8 +64,13 @@ Resources:
                   - dynamodb:PutItem
                   - dynamodb:UpdateItem
                   - dynamodb:Query
+                  - dynamodb:Scan
                   - dynamodb:TransactWriteItems
                 Resource: !GetAtt ArticlesInteractionsTable.Arn
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                Resource: !Sub "arn:aws:s3:::${CodeS3Bucket}/${StatsS3Key}"
 
   ArticlesApiLogGroup:
     Type: AWS::Logs::LogGroup
@@ -89,6 +97,8 @@ Resources:
           TABLE_NAME: !Ref ArticlesInteractionsTable
           ALLOWED_ORIGIN: !Ref AllowedOrigin
           RATE_LIMIT_SALT: !Ref RateLimitSalt
+          STATS_BUCKET: !Ref CodeS3Bucket
+          STATS_KEY: !Ref StatsS3Key
 
   ArticlesApiFunctionUrl:
     Type: AWS::Lambda::Url

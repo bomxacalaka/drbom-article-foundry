@@ -7,6 +7,7 @@ s3://drbom.net/articles/
 ```
 
 The live likes/comments API is a Lambda Function URL backed by DynamoDB. The infrastructure is defined in `infra/template.yaml`.
+The articles index reads public counts from `public/articles/stats.json`; Lambda refreshes the live S3 copy after likes/comments change.
 
 Future Codex sessions should read `AGENTS.md` before changing articles. It documents the default article workflow, theme rules, asset intake process, local preview expectations, and deployment boundaries.
 
@@ -112,6 +113,14 @@ Item families:
 - `RATE#<hash> / <kind>#<slug>#<bucket>`
 
 Comments are published immediately and rendered as text in the browser.
+
+The index page should not call Lambda for counts. It fetches:
+
+```text
+/articles/stats.json
+```
+
+The deployed object uses `Cache-Control: max-age=10, must-revalidate`, so normal page loads avoid Lambda while still picking up recent interaction counts quickly.
 
 ## Deployment Permissions Note
 

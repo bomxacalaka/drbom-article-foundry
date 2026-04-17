@@ -4,14 +4,19 @@ import {
   GetItemCommand,
   PutItemCommand,
   QueryCommand,
+  ScanCommand,
   TransactWriteItemsCommand,
   UpdateItemCommand
 } from "@aws-sdk/client-dynamodb";
+import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 
 const tableName = process.env.TABLE_NAME;
 const allowedOrigin = process.env.ALLOWED_ORIGIN || "https://drbom.net";
 const hashSalt = process.env.RATE_LIMIT_SALT;
+const statsBucket = process.env.STATS_BUCKET;
+const statsKey = process.env.STATS_KEY || "articles/stats.json";
 const ddb = new DynamoDBClient({});
+const s3 = new S3Client({});
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 function json(statusCode, body) {
@@ -128,6 +133,55 @@ async function getStats(slugs) {
   return items;
 }
 
+async function publishStatsSnapshot() {
+  if (!statsBucket || !statsKey) return;
+
+  const items = {};
+  let exclusiveStartKey;
+
+  do {
+    const response = await ddb.send(
+      new ScanCommand({
+        TableName: tableName,
+        FilterExpression: "sk = :meta",
+        ExpressionAttributeValues: {
+          ":meta": { S: "META" }
+        },
+        ExclusiveStartKey: exclusiveStartKey
+      })
+    );
+
+    for (const item of response.Items || []) {
+      const slug = item.pk?.S?.replace(/^ARTICLE#/, "");
+      if (!slug || !slugPattern.test(slug)) continue;
+      items[slug] = {
+        likes: Number(item.likes?.N || "0"),
+        comments: Number(item.comments?.N || "0")
+      };
+    }
+
+    exclusiveStartKey = response.LastEvaluatedKey;
+  } while (exclusiveStartKey);
+
+  await s3.send(
+    new PutObjectCommand({
+      Bucket: statsBucket,
+      Key: statsKey,
+      Body: `${JSON.stringify({ generatedAt: nowIso(), items }, null, 2)}\n`,
+      ContentType: "application/json; charset=utf-8",
+      CacheControl: "max-age=10, must-revalidate"
+    })
+  );
+}
+
+async function publishStatsSnapshotBestEffort() {
+  try {
+    await publishStatsSnapshot();
+  } catch (error) {
+    console.error("Failed to publish stats snapshot.", error);
+  }
+}
+
 function encodeCursor(key) {
   if (!key) return null;
   return Buffer.from(JSON.stringify(key), "utf8").toString("base64url");
@@ -241,6 +295,8 @@ async function postComment(slug, event) {
     })
   );
 
+  await publishStatsSnapshotBestEffort();
+
   return { ok: true, comment };
 }
 
@@ -273,6 +329,8 @@ async function postLike(slug, event) {
       ReturnValues: "ALL_NEW"
     })
   );
+
+  await publishStatsSnapshotBestEffort();
 
   return { ok: true, likes: Number(response.Attributes?.likes?.N || "0") };
 }

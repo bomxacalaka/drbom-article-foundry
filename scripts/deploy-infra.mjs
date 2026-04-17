@@ -38,13 +38,21 @@ function run(command, args, options = {}) {
 await mkdir(tmpDir, { recursive: true });
 await rm(zipPath, { force: true });
 
-if (!rateLimitSalt) {
-  throw new Error("ARTICLES_RATE_LIMIT_SALT is required for deploy:infra.");
-}
-
 const identityJson = await run("aws", ["sts", "get-caller-identity", "--output", "json"], { capture: true });
 const accountId = JSON.parse(identityJson).Account;
 const deployUserArn = JSON.parse(identityJson).Arn;
+
+let stackExists = false;
+try {
+  await run("aws", ["cloudformation", "describe-stacks", "--stack-name", stackName, "--region", region], { capture: true });
+  stackExists = true;
+} catch {
+  stackExists = false;
+}
+
+if (!stackExists && !rateLimitSalt) {
+  throw new Error("ARTICLES_RATE_LIMIT_SALT is required for the first deploy:infra run.");
+}
 
 const ttlSimulation = await run(
   "aws",
@@ -122,6 +130,11 @@ await run("aws", [
   "no-store"
 ]);
 
+const parameterOverrides = [`CodeS3Bucket=${bucket}`, `CodeS3Key=${codeKey}`];
+if (rateLimitSalt) {
+  parameterOverrides.push(`RateLimitSalt=${rateLimitSalt}`);
+}
+
 await run("aws", [
   "cloudformation",
   "deploy",
@@ -134,9 +147,7 @@ await run("aws", [
   "--region",
   region,
   "--parameter-overrides",
-  `CodeS3Bucket=${bucket}`,
-  `CodeS3Key=${codeKey}`,
-  `RateLimitSalt=${rateLimitSalt}`
+  ...parameterOverrides
 ]);
 
 const stackJson = await run(

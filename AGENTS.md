@@ -9,6 +9,7 @@ This repo powers `https://drbom.net/articles/`. Future Codex sessions should tre
 - The live site is `https://drbom.net/articles/`.
 - Likes and comments use the Lambda Function URL API configured in `public/articles/shared/article-shell.js`.
 - Runtime data is stored in DynamoDB table `drbom-articles-interactions`.
+- The article index reads counts from static `public/articles/stats.json`, not Lambda. Lambda refreshes `s3://drbom.net/articles/stats.json` after likes/comments change.
 - Infrastructure is in `infra/template.yaml`.
 - `scripts/deploy-infra.mjs` packages Lambda code, deploys CloudFormation, and ensures the newer Lambda Function URL invoke permission through boto3.
 - `scripts/deploy-static.mjs` validates, rebuilds the article index, and uploads `public/articles/` to S3.
@@ -167,6 +168,7 @@ If the user asks for article-specific server behavior:
 - Keep public endpoints rate-limited and validate all input.
 - Avoid storing secrets in frontend files.
 - Run syntax checks and deploy infra before deploying static pages that depend on the new API.
+- Do not make the article index call Lambda for stat counts. Keep index reads on `./stats.json`; use Lambda only for writes and comment retrieval.
 
 ## Git Expectations
 
