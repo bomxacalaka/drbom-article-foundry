@@ -82,11 +82,19 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  line-height: 1;
 }
 
-.article-item__metric svg {
+.article-item__metric > svg,
+.article-item__icon {
+  display: block;
+  flex: 0 0 15px;
   width: 15px;
   height: 15px;
+  max-width: 15px;
+  max-height: 15px;
+  inline-size: 15px;
+  block-size: 15px;
   stroke: currentColor;
   stroke-width: 1.8;
   fill: none;

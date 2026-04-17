@@ -65,9 +65,9 @@ function makeArticleItem(article) {
 function icon(name) {
   const icons = {
     heart:
-      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 8.7c0 5.2-8.5 10-8.5 10s-8.5-4.8-8.5-10A4.6 4.6 0 0 1 12 6a4.6 4.6 0 0 1 8.5 2.7Z"/></svg>',
+      '<svg class="article-item__icon" width="15" height="15" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.5 8.7c0 5.2-8.5 10-8.5 10s-8.5-4.8-8.5-10A4.6 4.6 0 0 1 12 6a4.6 4.6 0 0 1 8.5 2.7Z"/></svg>',
     comment:
-      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6.5A3.5 3.5 0 0 1 8.5 3h7A3.5 3.5 0 0 1 19 6.5v4A3.5 3.5 0 0 1 15.5 14H12l-5 4v-4.2a3.5 3.5 0 0 1-2-3.2v-4Z"/></svg>'
+      '<svg class="article-item__icon" width="15" height="15" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 6.5A3.5 3.5 0 0 1 8.5 3h7A3.5 3.5 0 0 1 19 6.5v4A3.5 3.5 0 0 1 15.5 14H12l-5 4v-4.2a3.5 3.5 0 0 1-2-3.2v-4Z"/></svg>'
   };
   return icons[name];
 }
