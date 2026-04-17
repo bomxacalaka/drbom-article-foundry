@@ -7,5 +7,10 @@
   "thumbnail": "./assets/thumbnail.svg",
   "tags": ["system", "demo"],
   "author": "drbom",
-  "draft": false
+  "draft": false,
+  "stats": {
+    "likes": 6,
+    "comments": 3,
+    "updatedAt": "2026-04-17T02:56:53.200Z"
+  }
 }

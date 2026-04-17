@@ -1,14 +1,21 @@
 import { writeFile } from "node:fs/promises";
 import path from "node:path";
-import { articlesDir, getArticleSlugs, readJson } from "./lib.mjs";
+import { articleDataFileName, articlesDir, getArticleSlugs, readJson } from "./lib.mjs";
 
 const slugs = await getArticleSlugs();
 const articles = [];
 
 for (const slug of slugs) {
-  const metadata = await readJson(path.join(articlesDir, slug, "article.json"));
+  const metadata = await readJson(path.join(articlesDir, slug, articleDataFileName));
   if (!metadata.draft) {
-    articles.push(metadata);
+    articles.push({
+      slug: metadata.slug,
+      title: metadata.title,
+      description: metadata.description,
+      publishedAt: metadata.publishedAt,
+      updatedAt: metadata.updatedAt,
+      data: `./${metadata.slug}/${articleDataFileName}`
+    });
   }
 }
 

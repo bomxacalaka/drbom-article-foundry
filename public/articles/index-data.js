@@ -21,9 +21,10 @@ function formatDate(value) {
   });
 }
 
-function makeArticleItem(article, stats = { likes: 0, comments: 0 }) {
+function makeArticleItem(article) {
   const item = document.createElement("article");
   item.className = "article-item";
+  const stats = article.stats || { likes: 0, comments: 0 };
 
   const href = `./${article.slug}/`;
   const content = document.createElement("div");
@@ -71,15 +72,12 @@ function icon(name) {
   return icons[name];
 }
 
-async function loadStats(articles) {
-  if (!articles.length) {
-    return {};
-  }
+async function loadArticleData(entry) {
   try {
-    const response = await fetch("./stats.json", { cache: "no-cache" }).then((result) => result.json());
-    return response.items || {};
+    const data = await fetch(entry.data || `./${entry.slug}/data.json`, { cache: "no-cache" }).then((result) => result.json());
+    return data.draft ? null : data;
   } catch {
-    return {};
+    return { ...entry, stats: { likes: 0, comments: 0 } };
   }
 }
 
@@ -93,8 +91,8 @@ async function init() {
     return;
   }
 
-  const stats = await loadStats(articles);
-  list.replaceChildren(...articles.map((article) => makeArticleItem(article, stats[article.slug])));
+  const hydrated = (await Promise.all(articles.map(loadArticleData))).filter(Boolean);
+  list.replaceChildren(...hydrated.map((article) => makeArticleItem(article)));
 }
 
 init().catch(() => {

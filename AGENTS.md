@@ -9,7 +9,7 @@ This repo powers `https://drbom.net/articles/`. Future Codex sessions should tre
 - The live site is `https://drbom.net/articles/`.
 - Likes and comments use the Lambda Function URL API configured in `public/articles/shared/article-shell.js`.
 - Runtime data is stored in DynamoDB table `drbom-articles-interactions`.
-- The article index reads counts from static `public/articles/stats.json`, not Lambda. Lambda refreshes `s3://drbom.net/articles/stats.json` after likes/comments change.
+- Each article stores public metadata and counts in `public/articles/<slug>/data.json`. The index reads those files, not Lambda. Lambda refreshes the changed article's live `data.json` after likes/comments change.
 - Infrastructure is in `infra/template.yaml`.
 - `scripts/deploy-infra.mjs` packages Lambda code, deploys CloudFormation, and ensures the newer Lambda Function URL invoke permission through boto3.
 - `scripts/deploy-static.mjs` validates, rebuilds the article index, and uploads `public/articles/` to S3.
@@ -59,11 +59,11 @@ public/articles/<slug>/
   index.html
   style.css
   script.js
-  article.json
+  data.json
   assets/
 ```
 
-`article.json` must match the folder slug and include title, description, dates, thumbnail, tags, author, and `draft`.
+`data.json` must match the folder slug and include title, description, dates, thumbnail, tags, author, `draft`, and `stats`.
 
 Use `draft: true` while a page is in progress. Set `draft: false` only when the user wants the article included on the live article index.
 
@@ -118,7 +118,7 @@ External asset hosting:
 - Do not assume GitHub/raw GitHub URLs for production assets by default.
 - If the user explicitly asks to reduce S3 storage by hosting heavy assets elsewhere, discuss the tradeoff first.
 - Prefer reliable, cacheable public URLs over raw repository URLs.
-- Document any external asset URL in the article folder, either in `article.json` or a local `ASSETS.md`.
+- Document any external asset URL in the article folder, either in `data.json` or a local `ASSETS.md`.
 
 ## Local Review Rules
 
@@ -168,7 +168,7 @@ If the user asks for article-specific server behavior:
 - Keep public endpoints rate-limited and validate all input.
 - Avoid storing secrets in frontend files.
 - Run syntax checks and deploy infra before deploying static pages that depend on the new API.
-- Do not make the article index call Lambda for stat counts. Keep index reads on `./stats.json`; use Lambda only for writes and comment retrieval.
+- Do not make the article index call Lambda for stat counts. Keep index reads on article-local `data.json`; use Lambda only for writes and comment retrieval.
 
 ## Git Expectations
 

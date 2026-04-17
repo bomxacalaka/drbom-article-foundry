@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import {
   absoluteUrlPattern,
+  articleDataFileName,
   apiConfigFile,
   articlesDir,
   getArticleSlugs,
@@ -24,7 +25,7 @@ if (!apiConfig.includes("window.ARTICLES_API_BASE_URL")) {
 
 for (const slug of await getArticleSlugs()) {
   const articleDir = path.join(articlesDir, slug);
-  const metadataPath = path.join(articleDir, "article.json");
+  const metadataPath = path.join(articleDir, articleDataFileName);
 
   if (seen.has(slug)) {
     errors.push(`Duplicate article slug: ${slug}`);
@@ -32,7 +33,7 @@ for (const slug of await getArticleSlugs()) {
   seen.add(slug);
 
   if (!(await pathExists(metadataPath))) {
-    errors.push(`${slug}: missing article.json`);
+    errors.push(`${slug}: missing ${articleDataFileName}`);
     continue;
   }
 
@@ -40,7 +41,7 @@ for (const slug of await getArticleSlugs()) {
   try {
     metadata = await readJson(metadataPath);
   } catch (error) {
-    errors.push(`${slug}: article.json is not valid JSON: ${error.message}`);
+    errors.push(`${slug}: ${articleDataFileName} is not valid JSON: ${error.message}`);
     continue;
   }
 
@@ -75,6 +76,11 @@ if (await pathExists(path.join(articlesDir, "articles.json"))) {
     return null;
   });
   if (index) {
+    for (const article of index.articles || []) {
+      if (article.data !== `./${article.slug}/${articleDataFileName}`) {
+        errors.push(`articles.json entry for ${article.slug} must point to ./${article.slug}/${articleDataFileName}.`);
+      }
+    }
     const dates = (index.articles || []).map((article) => Date.parse(article.publishedAt));
     for (let i = 1; i < dates.length; i += 1) {
       if (dates[i] > dates[i - 1]) {

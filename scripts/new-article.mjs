@@ -1,6 +1,6 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { articlesDir, pathExists, slugPattern } from "./lib.mjs";
+import { articleDataFileName, articlesDir, pathExists, slugPattern } from "./lib.mjs";
 
 const [slug, ...titleParts] = process.argv.slice(2);
 const title = titleParts.join(" ").trim() || slug?.split("-").map((part) => part[0]?.toUpperCase() + part.slice(1)).join(" ");
@@ -21,7 +21,7 @@ await mkdir(path.join(articleDir, "assets"), { recursive: true });
 const now = new Date().toISOString();
 
 await writeFile(
-  path.join(articleDir, "article.json"),
+  path.join(articleDir, articleDataFileName),
   `${JSON.stringify(
     {
       slug,
@@ -32,7 +32,12 @@ await writeFile(
       thumbnail: "./assets/thumbnail.svg",
       tags: ["draft"],
       author: "drbom",
-      draft: true
+      draft: true,
+      stats: {
+        likes: 0,
+        comments: 0,
+        updatedAt: now
+      }
     },
     null,
     2

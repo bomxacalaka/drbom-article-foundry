@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 export const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 export const articlesDir = path.join(repoRoot, "public", "articles");
 export const apiConfigFile = path.join(articlesDir, "shared", "article-shell.js");
+export const articleDataFileName = "data.json";
 
 export const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 export const absoluteUrlPattern = /^https?:\/\//i;
@@ -39,7 +40,7 @@ export function validateArticleMetadata(slug, metadata) {
     errors.push(`Folder name "${slug}" must be a lowercase slug.`);
   }
   if (metadata.slug !== slug) {
-    errors.push(`article.json slug must match folder name "${slug}".`);
+    errors.push(`data.json slug must match folder name "${slug}".`);
   }
   for (const field of ["title", "description", "publishedAt", "updatedAt", "thumbnail", "author"]) {
     if (typeof metadata[field] !== "string" || !metadata[field].trim()) {
@@ -59,6 +60,20 @@ export function validateArticleMetadata(slug, metadata) {
   }
   if (metadata.thumbnail?.startsWith("/") || metadata.thumbnail?.startsWith("../")) {
     errors.push("thumbnail must be relative to the article folder or an absolute URL.");
+  }
+  if (metadata.stats !== undefined) {
+    if (typeof metadata.stats !== "object" || metadata.stats === null || Array.isArray(metadata.stats)) {
+      errors.push("stats must be an object when present.");
+    } else {
+      for (const field of ["likes", "comments"]) {
+        if (!Number.isInteger(metadata.stats[field]) || metadata.stats[field] < 0) {
+          errors.push(`stats.${field} must be a non-negative integer.`);
+        }
+      }
+      if (metadata.stats.updatedAt !== undefined && Number.isNaN(Date.parse(metadata.stats.updatedAt))) {
+        errors.push("stats.updatedAt must be a valid date string when present.");
+      }
+    }
   }
 
   return errors;
@@ -90,12 +105,12 @@ export function contentTypeFor(filePath) {
 }
 
 export function cacheControlFor(filePath) {
-  if (path.basename(filePath) === "stats.json") {
+  if (path.basename(filePath) === articleDataFileName) {
     return "max-age=10, must-revalidate";
   }
 
   const ext = path.extname(filePath).toLowerCase();
-  if (ext === ".html" || ext === ".json") {
+  if (ext === ".html" || ext === ".json" || ext === ".js" || ext === ".css") {
     return "max-age=60, must-revalidate";
   }
   if (isContentHashed(filePath)) {

@@ -4,17 +4,17 @@ import {
   GetItemCommand,
   PutItemCommand,
   QueryCommand,
-  ScanCommand,
   TransactWriteItemsCommand,
   UpdateItemCommand
 } from "@aws-sdk/client-dynamodb";
-import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 
 const tableName = process.env.TABLE_NAME;
 const allowedOrigin = process.env.ALLOWED_ORIGIN || "https://drbom.net";
 const hashSalt = process.env.RATE_LIMIT_SALT;
 const statsBucket = process.env.STATS_BUCKET;
-const statsKey = process.env.STATS_KEY || "articles/stats.json";
+const articlesPrefix = (process.env.ARTICLES_PREFIX || "articles/").replace(/^\/+/, "").replace(/\/?$/, "/");
+const articleDataFileName = process.env.ARTICLE_DATA_FILE || "data.json";
 const ddb = new DynamoDBClient({});
 const s3 = new S3Client({});
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -133,52 +133,44 @@ async function getStats(slugs) {
   return items;
 }
 
-async function publishStatsSnapshot() {
-  if (!statsBucket || !statsKey) return;
+async function bodyToString(body) {
+  if (!body) return "";
+  return await body.transformToString();
+}
 
-  const items = {};
-  let exclusiveStartKey;
+async function publishArticleDataStats(slug, stats) {
+  if (!statsBucket) return;
 
-  do {
-    const response = await ddb.send(
-      new ScanCommand({
-        TableName: tableName,
-        FilterExpression: "sk = :meta",
-        ExpressionAttributeValues: {
-          ":meta": { S: "META" }
-        },
-        ExclusiveStartKey: exclusiveStartKey
-      })
-    );
-
-    for (const item of response.Items || []) {
-      const slug = item.pk?.S?.replace(/^ARTICLE#/, "");
-      if (!slug || !slugPattern.test(slug)) continue;
-      items[slug] = {
-        likes: Number(item.likes?.N || "0"),
-        comments: Number(item.comments?.N || "0")
-      };
-    }
-
-    exclusiveStartKey = response.LastEvaluatedKey;
-  } while (exclusiveStartKey);
+  const key = `${articlesPrefix}${slug}/${articleDataFileName}`;
+  const current = await s3.send(
+    new GetObjectCommand({
+      Bucket: statsBucket,
+      Key: key
+    })
+  );
+  const data = JSON.parse(await bodyToString(current.Body));
+  data.stats = {
+    likes: Number(stats.likes || 0),
+    comments: Number(stats.comments || 0),
+    updatedAt: nowIso()
+  };
 
   await s3.send(
     new PutObjectCommand({
       Bucket: statsBucket,
-      Key: statsKey,
-      Body: `${JSON.stringify({ generatedAt: nowIso(), items }, null, 2)}\n`,
+      Key: key,
+      Body: `${JSON.stringify(data, null, 2)}\n`,
       ContentType: "application/json; charset=utf-8",
       CacheControl: "max-age=10, must-revalidate"
     })
   );
 }
 
-async function publishStatsSnapshotBestEffort() {
+async function publishArticleDataStatsBestEffort(slug, stats) {
   try {
-    await publishStatsSnapshot();
+    await publishArticleDataStats(slug, stats);
   } catch (error) {
-    console.error("Failed to publish stats snapshot.", error);
+    console.error(`Failed to publish article data stats for ${slug}.`, error);
   }
 }
 
@@ -295,7 +287,7 @@ async function postComment(slug, event) {
     })
   );
 
-  await publishStatsSnapshotBestEffort();
+  await publishArticleDataStatsBestEffort(slug, await getStats([slug]).then((items) => items[slug]));
 
   return { ok: true, comment };
 }
@@ -330,7 +322,10 @@ async function postLike(slug, event) {
     })
   );
 
-  await publishStatsSnapshotBestEffort();
+  await publishArticleDataStatsBestEffort(slug, {
+    likes: Number(response.Attributes?.likes?.N || "0"),
+    comments: Number(response.Attributes?.comments?.N || "0")
+  });
 
   return { ok: true, likes: Number(response.Attributes?.likes?.N || "0") };
 }

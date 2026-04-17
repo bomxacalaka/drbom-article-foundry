@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-17T02:41:36.562Z",
+  "generatedAt": "2026-04-17T02:56:26.625Z",
   "articles": [
     {
       "slug": "welcome",
@@ -7,13 +7,7 @@
       "description": "A small live article used to validate the static article flow, S3 hosting, likes, and comments.",
       "publishedAt": "2026-04-16T00:00:00.000Z",
       "updatedAt": "2026-04-16T00:00:00.000Z",
-      "thumbnail": "./assets/thumbnail.svg",
-      "tags": [
-        "system",
-        "demo"
-      ],
-      "author": "drbom",
-      "draft": false
+      "data": "./welcome/data.json"
     }
   ]
 }

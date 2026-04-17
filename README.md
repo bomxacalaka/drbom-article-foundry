@@ -7,7 +7,7 @@ s3://drbom.net/articles/
 ```
 
 The live likes/comments API is a Lambda Function URL backed by DynamoDB. The infrastructure is defined in `infra/template.yaml`.
-The articles index reads public counts from `public/articles/stats.json`; Lambda refreshes the live S3 copy after likes/comments change.
+Each article keeps public metadata and counts in its own `data.json`; Lambda refreshes the live article `data.json` after likes/comments change.
 
 Future Codex sessions should read `AGENTS.md` before changing articles. It documents the default article workflow, theme rules, asset intake process, local preview expectations, and deployment boundaries.
 
@@ -48,11 +48,11 @@ public/articles/<slug>/
   index.html
   style.css
   script.js
-  article.json
+  data.json
   assets/
 ```
 
-`article.json` must include:
+`data.json` must include:
 
 ```json
 {
@@ -64,7 +64,12 @@ public/articles/<slug>/
   "thumbnail": "./assets/thumbnail.svg",
   "tags": ["demo"],
   "author": "drbom",
-  "draft": false
+  "draft": false,
+  "stats": {
+    "likes": 0,
+    "comments": 0,
+    "updatedAt": "2026-04-16T00:00:00.000Z"
+  }
 }
 ```
 
@@ -114,13 +119,13 @@ Item families:
 
 Comments are published immediately and rendered as text in the browser.
 
-The index page should not call Lambda for counts. It fetches:
+The index page should not call Lambda for counts. It fetches article-local data files listed in `articles.json`, for example:
 
 ```text
-/articles/stats.json
+/articles/welcome/data.json
 ```
 
-The deployed object uses `Cache-Control: max-age=10, must-revalidate`, so normal page loads avoid Lambda while still picking up recent interaction counts quickly.
+Article `data.json` files use `Cache-Control: max-age=10, must-revalidate`, so normal page loads avoid Lambda while still picking up recent interaction counts quickly.
 
 ## Deployment Permissions Note
 
